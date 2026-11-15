@@ -1,0 +1,68 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
+
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $title
+ * @property string|null $description
+ * @property Carbon|null $due_date
+ * @property bool $is_completed
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
+#[Fillable(['user_id', 'title', 'description', 'due_date', 'is_completed'])]
+class Task extends Model
+{
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'due_date' => 'date',
+            'is_completed' => 'boolean',
+        ];
+    }
+
+    /**
+     * Get the user that owns the task.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Limit the query to tasks owned by one user.
+     *
+     * @param  Builder<Task>  $query
+     */
+    public function scopeOwnedBy(Builder $query, int $userId): void
+    {
+        $query->where('user_id', $userId);
+    }
+
+    /**
+     * Resolve a route binding only when the task belongs to the authenticated user.
+     *
+     * Another user's task is treated as missing, so its details are not revealed.
+     *
+     * @param  mixed  $value
+     * @param  string|null  $field
+     */
+    public function resolveRouteBindingQuery($query, $value, $field = null)
+    {
+        return parent::resolveRouteBindingQuery($query, $value, $field)
+            ->ownedBy((int) (auth()->id() ?? 0));
+    }
+}
