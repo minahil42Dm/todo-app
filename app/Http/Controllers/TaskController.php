@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -47,12 +49,10 @@ class TaskController extends Controller
     /**
      * Store a new task for the authenticated user.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreTaskRequest $request): RedirectResponse
     {
-        $validated = $this->validatedTask($request);
-
         Task::query()->create([
-            ...$validated,
+            ...$request->validated(),
             'user_id' => $this->userId($request),
         ]);
 
@@ -84,11 +84,11 @@ class TaskController extends Controller
     /**
      * Update one task owned by the authenticated user.
      */
-    public function update(Request $request, Task $task): RedirectResponse
+    public function update(UpdateTaskRequest $request, Task $task): RedirectResponse
     {
         $this->ensureOwner($request, $task);
 
-        $task->update($this->validatedTask($request));
+        $task->update($request->validated());
 
         return redirect()
             ->route('tasks.index')
@@ -107,28 +107,6 @@ class TaskController extends Controller
         return redirect()
             ->route('tasks.index')
             ->with('status', 'Task deleted.');
-    }
-
-    /**
-     * Validate a task form submission.
-     *
-     * The owner is never taken from the form. A missing completed checkbox
-     * means the task is not completed.
-     *
-     * @return array{title: string, description: string|null, due_date: string|null, is_completed: bool}
-     */
-    private function validatedTask(Request $request): array
-    {
-        $request->mergeIfMissing([
-            'is_completed' => false,
-        ]);
-
-        return $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'due_date' => ['nullable', 'date'],
-            'is_completed' => ['boolean'],
-        ]);
     }
 
     /**

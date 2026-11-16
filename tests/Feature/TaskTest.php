@@ -14,8 +14,7 @@ class TaskTest extends TestCase
     public function test_authenticated_users_can_view_their_tasks(): void
     {
         $user = User::factory()->create();
-        $task = Task::query()->create([
-            'user_id' => $user->id,
+        $task = Task::factory()->for($user)->create([
             'title' => 'Walk the dog',
             'description' => 'Around the block',
         ]);
@@ -42,8 +41,7 @@ class TaskTest extends TestCase
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
-        $task = Task::query()->create([
-            'user_id' => $other->id,
+        $task = Task::factory()->for($other)->create([
             'title' => 'Secret task',
             'description' => 'Hidden details',
         ]);
@@ -99,8 +97,7 @@ class TaskTest extends TestCase
     public function test_users_can_update_their_own_task(): void
     {
         $user = User::factory()->create();
-        $task = Task::query()->create([
-            'user_id' => $user->id,
+        $task = Task::factory()->for($user)->create([
             'title' => 'Buy milk',
             'description' => 'Whole milk',
             'due_date' => '2026-12-01',
@@ -130,8 +127,7 @@ class TaskTest extends TestCase
     public function test_users_can_delete_their_own_task(): void
     {
         $user = User::factory()->create();
-        $task = Task::query()->create([
-            'user_id' => $user->id,
+        $task = Task::factory()->for($user)->create([
             'title' => 'Throw away the list',
         ]);
 
@@ -146,8 +142,7 @@ class TaskTest extends TestCase
     public function test_users_can_mark_tasks_complete_and_incomplete(): void
     {
         $user = User::factory()->create();
-        $task = Task::query()->create([
-            'user_id' => $user->id,
+        $task = Task::factory()->for($user)->create([
             'title' => 'Write the report',
             'description' => 'Remember the details',
             'due_date' => '2026-12-01',
@@ -183,18 +178,15 @@ class TaskTest extends TestCase
         $user = User::factory()->create();
         $other = User::factory()->create();
 
-        Task::query()->create([
-            'user_id' => $user->id,
+        Task::factory()->for($user)->create([
             'title' => 'Write tests',
             'is_completed' => false,
         ]);
-        Task::query()->create([
-            'user_id' => $user->id,
+        Task::factory()->for($user)->create([
             'title' => 'Ship feature',
             'is_completed' => true,
         ]);
-        Task::query()->create([
-            'user_id' => $other->id,
+        Task::factory()->for($other)->create([
             'title' => 'Someone elses task',
             'is_completed' => false,
         ]);
@@ -235,8 +227,7 @@ class TaskTest extends TestCase
     public function test_invalid_task_input_is_rejected(): void
     {
         $user = User::factory()->create();
-        $task = Task::query()->create([
-            'user_id' => $user->id,
+        $task = Task::factory()->for($user)->create([
             'title' => 'Keep me',
             'description' => 'Original details',
             'due_date' => '2026-12-01',
@@ -276,8 +267,7 @@ class TaskTest extends TestCase
 
     public function test_guests_cannot_access_task_routes(): void
     {
-        $task = Task::query()->create([
-            'user_id' => User::factory()->create()->id,
+        $task = Task::factory()->for(User::factory())->create([
             'title' => 'Private task',
         ]);
 

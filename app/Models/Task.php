@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Carbon;
 
 /**
@@ -21,6 +24,9 @@ use Illuminate\Support\Carbon;
 #[Fillable(['user_id', 'title', 'description', 'due_date', 'is_completed'])]
 class Task extends Model
 {
+    /** @use HasFactory<TaskFactory> */
+    use HasFactory;
+
     /**
      * Get the attributes that should be cast.
      *
@@ -36,6 +42,8 @@ class Task extends Model
 
     /**
      * Get the user that owns the task.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -57,12 +65,16 @@ class Task extends Model
      *
      * Another user's task is treated as missing, so its details are not revealed.
      *
+     * @param  Model|Builder<static>|\Illuminate\Contracts\Database\Eloquent\Builder|Relation<Model, Model, mixed>  $query
      * @param  mixed  $value
      * @param  string|null  $field
+     * @return Builder<static>
      */
     public function resolveRouteBindingQuery($query, $value, $field = null)
     {
-        return parent::resolveRouteBindingQuery($query, $value, $field)
-            ->ownedBy((int) (auth()->id() ?? 0));
+        /** @var Builder<static> $builder */
+        $builder = parent::resolveRouteBindingQuery($query, $value, $field);
+
+        return $builder->ownedBy((int) (auth()->id() ?? 0));
     }
 }

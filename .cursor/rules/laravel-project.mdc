@@ -1,0 +1,42 @@
+---
+description: Laravel 13 coding rules for the To-Do application
+alwaysApply: true
+---
+
+# Laravel project rules
+
+Follow Laravel 13 and modern PHP. Change only the code the task requires. Do not add a Composer or npm dependency without a clear reason.
+
+## HTTP and validation
+
+- Controllers handle the request flow. Put validation in a Form Request such as `app/Http/Requests/StoreTaskRequest.php`.
+- Do not put validation rules inside controllers.
+- Keep `authorize()` in the Form Request. A missing `is_completed` value means the task is not completed.
+
+```php
+// Good
+public function store(StoreTaskRequest $request): RedirectResponse
+{
+    Task::query()->create([
+        ...$request->validated(),
+        'user_id' => (int) $request->user()->id,
+    ]);
+}
+```
+
+## Ownership and mass assignment
+
+- Never save `user_id` from form input. Set it from the authenticated user.
+- When listing, showing, updating, or deleting tasks, limit the query to the signed-in user. Use `ownedBy` and the existing route binding. Another user's task is not found.
+- Mass-assign only fillable fields. Respect `#[Fillable]` on `Task` and `User`.
+
+## Data and tests
+
+- Use Eloquent relationships and query scopes instead of repeating ownership filters.
+- Put schema changes in migrations. Do not change the database by hand.
+- Add a meaningful feature test for new behavior and bug fixes.
+
+## Git
+
+- Use Conventional Commits, such as `feat:`, `fix:`, or `test:`.
+- Do not commit secrets or change unrelated files.
