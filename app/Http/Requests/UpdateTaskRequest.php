@@ -2,44 +2,29 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Task;
 
-class UpdateTaskRequest extends FormRequest
+class UpdateTaskRequest extends StoreTaskRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Determine if the user is authorized to update this task.
+     *
+     * Route binding already hides another user's task. This check rejects
+     * an update when the resolved task belongs to someone else.
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
-    }
+        $user = $this->user();
+        $task = $this->route('task');
 
-    /**
-     * Prepare the data for validation.
-     *
-     * A missing completed checkbox means the task is not completed.
-     */
-    protected function prepareForValidation(): void
-    {
-        $this->mergeIfMissing([
-            'is_completed' => false,
-        ]);
-    }
+        if ($user === null) {
+            return false;
+        }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * The owner is never taken from the form.
-     *
-     * @return array<string, array<int, string>>
-     */
-    public function rules(): array
-    {
-        return [
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'due_date' => ['nullable', 'date'],
-            'is_completed' => ['boolean'],
-        ];
+        if ($task instanceof Task) {
+            return (int) $task->user_id === (int) $user->id;
+        }
+
+        return true;
     }
 }
