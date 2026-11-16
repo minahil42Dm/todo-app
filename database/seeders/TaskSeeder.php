@@ -5,28 +5,28 @@ namespace Database\Seeders;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use RuntimeException;
 
 class TaskSeeder extends Seeder
 {
     /**
-     * Seed tasks for the existing Gmail account.
+     * Seed sample tasks for a dedicated demo account.
      *
-     * The tasks table has no unique title, so a second run would insert
-     * another 10 tasks. Skip when this user already owns tasks.
+     * The tasks table has no unique title, so another run would insert
+     * another 10 tasks. Skip only when this demo user already owns tasks.
+     * Tasks owned by other users do not block the demo data.
      */
     public function run(): void
     {
-        $user = User::query()
-            ->whereKey(1)
-            ->where('email', 'minahilmirza948@gmail.com')
-            ->first();
+        $user = User::query()->where('email', 'demo@example.com')->first();
 
         if ($user === null) {
-            throw new RuntimeException('The Gmail account minahilmirza948@gmail.com was not found as user 1.');
+            $user = User::factory()->create([
+                'name' => 'Demo User',
+                'email' => 'demo@example.com',
+            ]);
         }
 
-        if (Task::query()->where('user_id', $user->id)->exists()) {
+        if (Task::query()->whereBelongsTo($user)->exists()) {
             return;
         }
 
